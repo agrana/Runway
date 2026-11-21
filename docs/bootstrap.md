@@ -62,8 +62,6 @@ Callers **must independently verify** live account permissions, shared-database 
 
 ### Tracked template-state artifacts (do not read values here)
 
-- `template.config.json`
-- `platforms.json`
 - `supabase/.temp/cli-latest`
 - `supabase/.temp/gotrue-version`
 - `supabase/.temp/pooler-url`

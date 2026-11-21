@@ -19,7 +19,6 @@ Setup guides and troubleshooting:
 
 ### `/docs/development/`
 Development tools and practices:
-- `PRE_COMMIT_SETUP.md` - Pre-commit hooks configuration
 - `LINTING_NOTE.md` - Linting configuration and notes
 
 ### `/docs/ci-cd/`
@@ -53,7 +52,7 @@ General documentation:
 ## 📚 Main Documentation
 
 The primary user-facing documentation is in the repository root:
-- `00_Manifesto.md` through `06_Build_Your_App.md` - Complete blog series/guide
+- `guide/00_Manifesto.md` through `guide/06_Build_Your_App.md` - Complete blog series/guide
 - `README.md` - Project overview and quick start
 
 ## 🔧 Infrastructure Documentation

@@ -90,7 +90,6 @@ jspm_packages/
 .dynamodb/
 
 # Pre-commit
-.pre-commit-config.yaml.bak
 .pre-commit-cache/
 
 # Terraform
@@ -105,3 +104,4 @@ terraform.rc
 .tflint.hcl.bak
 tfplan
 *.tfplan
+tsconfig.tsbuildinfo

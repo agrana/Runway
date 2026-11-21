@@ -18,18 +18,18 @@ No AWS account or CloudFront is required. OpenAI, Jev and other inference accoun
 
 ## Human-friendly connection sequence
 
-1. **Generate your GitHub repository.** Use the template; inspect its [agent guide](AGENTS.md) and workflows.
+1. **Generate your GitHub repository.** Use the template; inspect its [agent guide](../../AGENTS.md) and workflows.
 2. **Connect GitHub to Vercel.** Allow access to the selected app repository and create/import its own Vercel project. Review automatic deployment triggers and initial configuration before import; incomplete configuration may cause an initial build failure.
-3. **Connect the existing Supabase project.** Prefer the existing-project integration if offered for your account; see [Vercel–Supabase integration choices](docs/setup/VERCEL_SUPABASE.md). Do not choose a flow that creates another database when reusing a shared one.
+3. **Connect the existing Supabase project.** Prefer the existing-project integration if offered for your account; see [Vercel–Supabase integration choices](../setup/VERCEL_SUPABASE.md). Do not choose a flow that creates another database when reusing a shared one.
 4. **Validate environment bindings.** Check names, target environments and public/server boundaries without printing values. Supabase integration does not configure GitHub Actions credentials, app migrations or RLS isolation automatically.
 5. **Authorize Cloudflare when ready for your custom domain.** Reuse the correct zone and review the proposed app record before writing it.
-6. **Review the deployment plan.** Account connection and a valid configuration are separate from approval to provision resources or run migrations. The initializer's live apply integration remains gated; follow the current [bootstrap contract](docs/bootstrap.md).
+6. **Review the deployment plan.** Account connection and a valid configuration are separate from approval to provision resources or run migrations. The initializer's live apply integration remains gated; follow the current [bootstrap contract](../bootstrap.md).
 
 The intended one-entry-point wizard is an onboarding goal, not an implemented guarantee. Today, use published commands and provider connection screens. An agent should inspect existing connection status and request only missing authorization, preserving progress between steps.
 
 ## Public Supabase key names
 
-Prefer `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` when the integration or dashboard provides it. Legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` remains supported as a blank fallback. Modern publishable and legacy anon JWT values may legitimately differ for the same project; resolve prefers modern when nonempty and validates each configured candidate. Privileged/service-role material must never occupy a public slot. Public keys rely on database RLS and are not service credentials. See the [Vercel–Supabase key matrix](docs/setup/VERCEL_SUPABASE.md#public-key-name-matrix-modern--legacy).
+Prefer `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` when the integration or dashboard provides it. Legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` remains supported as a blank fallback. Modern publishable and legacy anon JWT values may legitimately differ for the same project; resolve prefers modern when nonempty and validates each configured candidate. Privileged/service-role material must never occupy a public slot. Public keys rely on database RLS and are not service credentials. See the [Vercel–Supabase key matrix](../setup/VERCEL_SUPABASE.md#public-key-name-matrix-modern--legacy).
 
 ## Credential boundaries
 
@@ -58,4 +58,4 @@ For Cloudflare DNS automation, request Zone Read and DNS Edit on the **specific 
 
 ## Next steps
 
-Use the [agent onboarding prompt](docs/onboard-your-agent.md), [AGENTS.md](AGENTS.md) and [current bootstrap documentation](docs/bootstrap.md). Earlier deployment guides provide historical context; current disabled provisioning and migration gates take precedence.
+Use the [agent onboarding prompt](../onboard-your-agent.md), [AGENTS.md](../../AGENTS.md) and [current bootstrap documentation](../bootstrap.md). Earlier deployment guides provide historical context; current disabled provisioning and migration gates take precedence.
