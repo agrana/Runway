@@ -1,5 +1,7 @@
 # Runway a free personal stack
 
+![Paper airplane taking off along a glowing green runway.](docs/images/runway.png)
+
 ![Solution architecture: GitHub Actions coordinates Cloudflare DNS and Vercel deployment, with a conditional Supabase data and authentication connection.](docs/architecture/solution-overview.svg)
 
 ## Onboard your agent
