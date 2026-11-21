@@ -1,6 +1,6 @@
 # Runway a free personal stack
 
-![Paper airplane taking off along a glowing green runway.](docs/images/runway.png?v=shorter-1)
+![Paper airplane taking off along a glowing green runway.](docs/images/runway.png?v=centered-1)
 
 ![Solution architecture: GitHub Actions coordinates Cloudflare DNS and Vercel deployment, with a conditional Supabase data and authentication connection.](docs/architecture/solution-overview.svg?v=lighter-cards-1)
 
