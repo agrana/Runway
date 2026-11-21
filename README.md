@@ -2,7 +2,7 @@
 
 ![Paper airplane taking off along a glowing green runway.](docs/images/runway.png)
 
-![Solution architecture: GitHub Actions coordinates Cloudflare DNS and Vercel deployment, with a conditional Supabase data and authentication connection.](docs/architecture/solution-overview.svg)
+![Solution architecture: GitHub Actions coordinates Cloudflare DNS and Vercel deployment, with a conditional Supabase data and authentication connection.](docs/architecture/solution-overview.svg?v=269851e)
 
 ## Onboard your agent
 
