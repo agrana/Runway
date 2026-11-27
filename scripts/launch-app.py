@@ -349,9 +349,10 @@ def run(source, binary, operation='deploy', expected_project=None, confirm_repos
         # project create swallows HTTP 409 in CLI 65.4; api preserves failure.
         # Official create environmentVariables schema lacks Config visibility;
         # do not fabricate it. Interrupted unmarked creation needs exact-ID recovery.
-        created = cli(binary, source, team, 'api', '/v10/projects', '-X', 'POST',
+        # Node 24 is selected by package.json engines.node; createProject rejects nodeVersion.
+        created = cli(binary, source, team, 'api', '/v11/projects', '-X', 'POST',
                       '--input', '-', value=json.dumps({'name': name,
-                      'framework': 'nextjs', 'nodeVersion': '24.x'}))
+                      'framework': 'nextjs'}))
         pid = identifier(created.get('id'), 'prj_')
         emit(status='project_created_recovery_handle', project_id=pid)
         inspected = cli(binary, source, team, 'project', 'inspect', pid, '--json')

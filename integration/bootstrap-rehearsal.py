@@ -161,10 +161,10 @@ check(not any(k in os.environ for k in (
 check("--token" not in a and "--scope" in a, "stub_cli_args")
 value = sys.stdin.read()
 s["calls"].append([a, value])
-if a[:2] == ["api", "/v10/projects"]:
+if a[:2] == ["api", "/v11/projects"]:
     check(a[2:6] == ["-X", "POST", "--input", "-"], "stub_create_args")
     body = json.loads(value)
-    check(body["framework"] == "nextjs" and body["nodeVersion"] == "24.x", "stub_create_body")
+    check(set(body) == {"name", "framework"} and body["framework"] == "nextjs", "stub_create_body")
     if s.get("collision409"):
         p.write_text(json.dumps(s)); print("HTTP 409", file=sys.stderr); sys.exit(1)
     check(not s["project"], "stub_project_exists")
@@ -669,7 +669,7 @@ def run_launcher_scenarios(
         return sum(c[0][0] == "deploy" for c in _state(state_path)["calls"])
 
     def create_count() -> int:
-        return sum(c[0][:2] == ["api", "/v10/projects"] for c in _state(state_path)["calls"])
+        return sum(c[0][:2] == ["api", "/v11/projects"] for c in _state(state_path)["calls"])
 
     patches = [
         patch.dict(os.environ, scenario_env, clear=True),

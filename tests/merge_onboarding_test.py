@@ -486,8 +486,9 @@ a = sys.argv[1:]
 assert os.environ.get('VERCEL_TOKEN') == 'offline-token'
 value = sys.stdin.read()
 s['calls'].append([a, value])
-if a[:2] == ['api', '/v10/projects']:
+if a[:2] == ['api', '/v11/projects']:
     body = json.loads(value)
+    assert set(body) == {'name', 'framework'} and body['framework'] == 'nextjs'
     s['project'] = {'id': 'prj_Offline', 'name': body['name'], 'accountId': 'team_Offline'}
     print(json.dumps(s['project']))
 elif a[:2] == ['project', 'inspect']:
