@@ -26,10 +26,10 @@ assert not any(k in os.environ for k in ('SUPABASE_URL','SUPABASE_ANON_KEY','VER
 assert '--token' not in a and '--scope' in a
 value = sys.stdin.read()
 s['calls'].append([a, value])
-if a[:2] == ['api','/v10/projects']:
+if a[:2] == ['api','/v11/projects']:
     assert a[2:6] == ['-X','POST','--input','-']
     body = json.loads(value)
-    assert body['framework'] == 'nextjs' and body['nodeVersion'] == '24.x'
+    assert set(body) == {'name', 'framework'} and body['framework'] == 'nextjs'
     if s.get('collision409'):
         p.write_text(json.dumps(s)); print('HTTP 409',file=sys.stderr); sys.exit(1)
     assert not s['project']
@@ -119,6 +119,22 @@ class LaunchTests(unittest.TestCase):
             return app.run(self.source,str(self.binary),**kw)
     def deploy_count(self):
         return sum(c[0][0] == 'deploy' for c in self.state()['calls'])
+    def test_create_request_matches_reviewed_provider_schema(self):
+        import jsonschema
+        contract = json.loads((ROOT / 'tests/fixtures/vercel-create-project.schema.json').read_text())
+        self.assertEqual(self.run_app(), 0)
+        creates = [c for c in self.state()['calls'] if c[0][:2] == ['api', contract['path']]]
+        self.assertEqual(len(creates), 1)
+        args, raw = creates[0]
+        self.assertEqual(args[2:6], ['-X', contract['method'], '--input', '-'])
+        payload = json.loads(raw)
+        jsonschema.validate(payload, contract['schema'])
+        self.assertEqual(payload, {'name': 'example-app', 'framework': 'nextjs'})
+        self.assertEqual(json.loads((ROOT / 'package.json').read_text())['engines']['node'], '24.x')
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(dict(payload, nodeVersion='24.x'), contract['schema'])
+        self.assertFalse(any('/v10/projects' == c[0][1] for c in self.state()['calls'] if len(c[0]) > 1))
+
     def test_two_independent_generated_repositories(self):
         self.assertEqual(self.run_app(),0)
         self.assertEqual(self.state()['project']['name'],'example-app')
@@ -173,7 +189,7 @@ class LaunchTests(unittest.TestCase):
         with self.assertRaisesRegex(app.Failure,'cli_failed'): self.run_app()
         s=self.state(); del s['interrupt']; self.save(s)
         self.assertEqual(self.run_app(),0)
-        self.assertEqual(sum(c[0][:2]==['api','/v10/projects'] for c in self.state()['calls']),1)
+        self.assertEqual(sum(c[0][:2]==['api','/v11/projects'] for c in self.state()['calls']),1)
     def test_sha_context_and_team_fail_closed(self):
         for key,value,error in [('GITHUB_SHA','a'*40,'source_sha_mismatch'),
             ('GITHUB_EVENT_NAME','pull_request','event_not_authorized'),
@@ -204,7 +220,7 @@ class LaunchTests(unittest.TestCase):
         os.environ['GITHUB_SHA'] = self.sha
         self.assertEqual(self.run_app(),0)
         self.assertEqual(self.deploy_count(),2)
-        self.assertEqual(sum(c[0][:2]==['api','/v10/projects'] for c in self.state()['calls']),1)
+        self.assertEqual(sum(c[0][:2]==['api','/v11/projects'] for c in self.state()['calls']),1)
     def test_creation_collision_never_marks_or_deploys(self):
         s=self.state(); s['collision409']=True; self.save(s)
         with self.assertRaisesRegex(app.Failure,'cli_failed'): self.run_app()

@@ -1,0 +1,515 @@
+{
+  "source": "https://openapi.vercel.sh",
+  "operationId": "createProject",
+  "method": "POST",
+  "path": "/v11/projects",
+  "schema": {
+    "additionalProperties": false,
+    "properties": {
+      "enablePreviewFeedback": {
+        "description": "Opt-in to preview toolbar on the project level",
+        "type": "boolean",
+        "nullable": true
+      },
+      "enableProductionFeedback": {
+        "description": "Opt-in to production toolbar on the project level",
+        "type": "boolean",
+        "nullable": true
+      },
+      "expiration": {
+        "description": "Schedules the project for automatic deletion after the given timeframe.",
+        "type": "object",
+        "required": [
+          "timeframe"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "timeframe": {
+            "type": "string",
+            "enum": [
+              "1-hour",
+              "1-day",
+              "1-week",
+              "2-week",
+              "1-month"
+            ],
+            "description": "How far in the future the project will be automatically deleted"
+          }
+        }
+      },
+      "previewDeploymentsDisabled": {
+        "description": "Specifies whether preview deployments are disabled for this project.",
+        "type": "boolean",
+        "nullable": true
+      },
+      "previewDeploymentSuffix": {
+        "description": "Custom domain suffix for preview deployments. Takes precedence over team-level suffix. Must be a domain owned by the team.",
+        "type": "string",
+        "maxLength": 253,
+        "nullable": true
+      },
+      "buildCommand": {
+        "description": "The build command for this project. When `null` is used this value will be automatically detected",
+        "maxLength": 256,
+        "type": "string",
+        "nullable": true
+      },
+      "commandForIgnoringBuildStep": {
+        "maxLength": 256,
+        "type": "string",
+        "nullable": true
+      },
+      "devCommand": {
+        "description": "The dev command for this project. When `null` is used this value will be automatically detected",
+        "maxLength": 256,
+        "type": "string",
+        "nullable": true
+      },
+      "environmentVariables": {
+        "description": "Collection of ENV Variables the Project will use",
+        "items": {
+          "properties": {
+            "key": {
+              "description": "Name of the ENV variable",
+              "type": "string"
+            },
+            "target": {
+              "description": "Deployment Target or Targets in which the ENV variable will be used",
+              "oneOf": [
+                {
+                  "enum": [
+                    "production",
+                    "preview",
+                    "development"
+                  ]
+                },
+                {
+                  "items": {
+                    "enum": [
+                      "production",
+                      "preview",
+                      "development"
+                    ]
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "gitBranch": {
+              "description": "If defined, the git branch of the environment variable (must have target=preview)",
+              "type": "string",
+              "maxLength": 250
+            },
+            "type": {
+              "description": "Type of the ENV variable",
+              "enum": [
+                "system",
+                "encrypted",
+                "plain",
+                "sensitive"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Value for the ENV variable",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key",
+            "value",
+            "target"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "framework": {
+        "description": "The framework that is being used for this project. When `null` is used no framework is selected",
+        "enum": [
+          null,
+          "container",
+          "blitzjs",
+          "nextjs",
+          "gatsby",
+          "remix",
+          "react-router",
+          "astro",
+          "hexo",
+          "eleventy",
+          "docusaurus-2",
+          "docusaurus",
+          "preact",
+          "solidstart-1",
+          "solidstart",
+          "dojo",
+          "ember",
+          "vue",
+          "scully",
+          "ionic-angular",
+          "angular",
+          "polymer",
+          "svelte",
+          "sveltekit",
+          "sveltekit-1",
+          "ionic-react",
+          "create-react-app",
+          "gridsome",
+          "umijs",
+          "sapper",
+          "saber",
+          "stencil",
+          "nuxtjs",
+          "redwoodjs",
+          "hugo",
+          "jekyll",
+          "brunch",
+          "middleman",
+          "zola",
+          "hydrogen",
+          "vite",
+          "tanstack-start",
+          "tanstack-start-lovable",
+          "vitepress",
+          "vuepress",
+          "parcel",
+          "fastapi",
+          "flask",
+          "fasthtml",
+          "django",
+          "ash",
+          "factory-eve",
+          "eve",
+          "sanity",
+          "sanity-v2",
+          "storybook",
+          "nitro",
+          "hono",
+          "express",
+          "h3",
+          "koa",
+          "nestjs",
+          "elysia",
+          "fastify",
+          "xmcp",
+          "python",
+          "ruby",
+          "rust",
+          "axum",
+          "actix-web",
+          "bun",
+          "node",
+          "go",
+          "services",
+          "mastra"
+        ]
+      },
+      "gitRepository": {
+        "description": "The Git Repository that will be connected to the project. When this is defined, any pushes to the specified connected Git Repository will be automatically deployed",
+        "properties": {
+          "repo": {
+            "description": "The name of the git repository. For example: \\\"vercel/next.js\\\"",
+            "type": "string"
+          },
+          "type": {
+            "description": "The Git Provider of the repository",
+            "enum": [
+              "github",
+              "github-limited",
+              "gitlab",
+              "bitbucket",
+              "vercel",
+              "cursor-origin"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "repo"
+        ],
+        "type": "object"
+      },
+      "installCommand": {
+        "description": "The install command for this project. When `null` is used this value will be automatically detected",
+        "maxLength": 256,
+        "type": "string",
+        "nullable": true
+      },
+      "name": {
+        "description": "The desired name for the project",
+        "example": "a-project-name",
+        "type": "string",
+        "maxLength": 100
+      },
+      "skipGitConnectDuringLink": {
+        "description": "Opts-out of the message prompting a CLI user to connect a Git repository in `vercel link`.",
+        "type": "boolean",
+        "deprecated": true
+      },
+      "ssoProtection": {
+        "description": "The Vercel Auth setting for the project (historically named \\\"SSO Protection\\\")",
+        "type": "object",
+        "properties": {
+          "deploymentType": {
+            "type": "string",
+            "enum": [
+              "all",
+              "preview",
+              "prod_deployment_urls_and_all_previews",
+              "all_except_custom_domains"
+            ]
+          }
+        },
+        "required": [
+          "deploymentType"
+        ],
+        "nullable": true
+      },
+      "sandbox": {
+        "type": "object",
+        "description": "Specifies the default region and failover regions for sandboxes created in the project",
+        "properties": {
+          "region": {
+            "description": "The Vercel region sandboxes in this project are created in by default.",
+            "enum": [
+              "iad1",
+              "sfo1",
+              "cle1",
+              "cdg1",
+              "fra1",
+              "arn1",
+              "sin1",
+              "pdx1",
+              "lhr1",
+              "icn1",
+              "bom1",
+              "cpt1",
+              "dub1",
+              "gru1",
+              "hkg1",
+              "syd1",
+              "yul1",
+              "hnd1",
+              "kix1"
+            ],
+            "example": "iad1"
+          },
+          "failoverRegions": {
+            "description": "The regions sandboxes in this project fall back to when they cannot be created in `region`.",
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 19,
+            "items": {
+              "enum": [
+                "iad1",
+                "sfo1",
+                "cle1",
+                "cdg1",
+                "fra1",
+                "arn1",
+                "sin1",
+                "pdx1",
+                "lhr1",
+                "icn1",
+                "bom1",
+                "cpt1",
+                "dub1",
+                "gru1",
+                "hkg1",
+                "syd1",
+                "yul1",
+                "hnd1",
+                "kix1"
+              ]
+            },
+            "example": [
+              "sfo1",
+              "cle1"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputDirectory": {
+        "description": "The output directory of the project. When `null` is used this value will be automatically detected",
+        "maxLength": 256,
+        "type": "string",
+        "nullable": true
+      },
+      "publicSource": {
+        "deprecated": true,
+        "description": "Deprecated. Accepted for backwards compatibility but ignored.",
+        "type": "boolean",
+        "nullable": true
+      },
+      "rootDirectory": {
+        "description": "The name of a directory or relative path to the source code of your project. When `null` is used it will default to the project root",
+        "maxLength": 256,
+        "type": "string",
+        "nullable": true
+      },
+      "serverlessFunctionRegion": {
+        "description": "The region to deploy Serverless Functions in this project",
+        "maxLength": 4,
+        "type": "string",
+        "nullable": true
+      },
+      "serverlessFunctionZeroConfigFailover": {
+        "description": "Specifies whether Zero Config Failover is enabled for this project.",
+        "oneOf": [
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "oidcTokenConfig": {
+        "description": "OpenID Connect JSON Web Token generation configuration.",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "description": "Whether or not to generate OpenID Connect JSON Web Tokens.",
+            "deprecated": true,
+            "type": "boolean",
+            "default": true
+          },
+          "issuerMode": {
+            "description": "team: `https://oidc.vercel.com/[team_slug]` global: `https://oidc.vercel.com`",
+            "type": "string",
+            "enum": [
+              "team",
+              "global"
+            ],
+            "default": "team"
+          }
+        }
+      },
+      "enableAffectedProjectsDeployments": {
+        "description": "Opt-in to skip deployments when there are no changes to the root directory and its dependencies",
+        "type": "boolean"
+      },
+      "resourceConfig": {
+        "properties": {
+          "buildMachineType": {
+            "enum": [
+              "standard",
+              "basic",
+              "enhanced",
+              "turbo",
+              "elastic"
+            ]
+          },
+          "fluid": {
+            "type": "boolean"
+          },
+          "functionDefaultRegions": {
+            "description": "The regions to deploy Vercel Functions to for this project",
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 4
+            }
+          },
+          "functionDefaultTimeout": {
+            "type": "number",
+            "maximum": 900,
+            "minimum": 1
+          },
+          "functionDefaultMemoryType": {
+            "enum": [
+              "standard_legacy",
+              "standard",
+              "performance",
+              "performance_xl"
+            ]
+          },
+          "functionZeroConfigFailover": {
+            "description": "Specifies whether Zero Config Failover is enabled for this project.",
+            "oneOf": [
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "elasticConcurrencyEnabled": {
+            "type": "boolean"
+          },
+          "buildMachineSelection": {
+            "enum": [
+              "elastic",
+              "fixed"
+            ]
+          },
+          "buildMachineElasticLastUpdated": {
+            "type": "number"
+          },
+          "buildMachineElasticReason": {
+            "enum": [
+              "oom-failure",
+              "enospc-failure",
+              "build-timeout-failure",
+              "basic-floor",
+              "high-peak-memory",
+              "sustained-high-cpu",
+              "high-peak-disk",
+              "long-build-duration",
+              "short-build-duration",
+              "enterprise-floor"
+            ]
+          },
+          "buildMachineElasticTransition": {
+            "type": "object",
+            "required": [
+              "at",
+              "direction",
+              "algorithmVersion"
+            ],
+            "properties": {
+              "at": {
+                "type": "number"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "upgrade",
+                  "downgrade"
+                ]
+              },
+              "algorithmVersion": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "isNSNBDisabled": {
+            "type": "boolean"
+          },
+          "buildQueue": {
+            "type": "object",
+            "properties": {
+              "configuration": {
+                "type": "string",
+                "enum": [
+                  "SKIP_NAMESPACE_QUEUE",
+                  "WAIT_FOR_NAMESPACE_QUEUE"
+                ]
+              }
+            }
+          },
+          "enableFunctionsBeta": {
+            "type": "boolean"
+          }
+        },
+        "type": "object",
+        "description": "Specifies resource override configuration for the project",
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "type": "object"
+  }
+}
