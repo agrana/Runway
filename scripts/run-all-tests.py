@@ -41,6 +41,8 @@ EXPLICIT_SUITES: Tuple[str, ...] = (
     "tests/custom_domain_test.py",
     "tests/merge_onboarding_test.py",
     "tests/database_preflight_test.py",
+    "tests/supabase_auth_redirects_test.py",
+    "tests/project_auth_redirect_writer_test.py",
 )
 
 

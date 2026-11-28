@@ -1,0 +1,50 @@
+name: Project Auth redirect writer
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_ref:
+        description: Reviewed Supabase project ref
+        required: true
+        type: string
+      repository_id:
+        description: Reviewed application repository ID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  write:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository_id == '1051601680' &&
+      github.repository == 'agrana/Runway' &&
+      github.event.repository.default_branch == 'main' &&
+      github.ref == 'refs/heads/main' &&
+      github.workflow_ref == 'agrana/Runway/.github/workflows/project-auth-redirect-writer.yml@refs/heads/main' &&
+      github.workflow_sha == github.sha
+    # One lock for all projects, shared by all Runway Auth writer jobs.
+    # Do not derive the lock from untrusted dispatch input.
+    concurrency:
+      group: supabase-project-auth-config-writer
+      cancel-in-progress: false
+    environment: project-auth-redirect-writer
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      REQUEST_PROJECT_REF: ${{ inputs.project_ref }}
+      REQUEST_REPOSITORY_ID: ${{ inputs.repository_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate dispatch and reviewed registry entry without credentials
+        run: python3 -Es scripts/project-auth-redirect-writer.py --check-registry
+      - name: Verify application evidence and reconcile Auth redirects
+        env:
+          AUTH_REDIRECT_EVIDENCE_TOKEN: ${{ secrets.AUTH_REDIRECT_EVIDENCE_TOKEN }}
+          SUPABASE_AUTH_MANAGEMENT_TOKEN: ${{ secrets.SUPABASE_AUTH_MANAGEMENT_TOKEN }}
+        run: python3 -Es scripts/project-auth-redirect-writer.py

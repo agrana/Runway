@@ -9,6 +9,8 @@ catalog preflight after quality and before shell writes; success does not
 authorize migrations. Optional database-delivery.config.json (template
 enabled/auto_apply false) can enroll an owned Vercel project, run authorized
 delivery, then production deploy + DNS. This path never claims full-app-ready.
+Optional Auth redirect policy produces a non-authorizing project-owner handoff
+only after the exact application hostname and revision are verified.
 
 Quality-gate selection policy: among runs that match the expected workflow path,
 head SHA, default branch, event, and repository identity, choose the highest
@@ -610,6 +612,7 @@ def run(source, binary, artifact_dir, *, quality_wait=None, sleeper=None, clock=
     artifact_dir = str(Path(artifact_dir).resolve())
     Path(artifact_dir).mkdir(parents=True, exist_ok=True)
     cfg_mod = load('onboarding-config')
+    auth_redirects = load('supabase_auth_redirects')
     sleeper = time.sleep if sleeper is None else sleeper
     clock = time.monotonic if clock is None else clock
     verify_window_sec = VERIFY_WINDOW_SEC if verify_window_sec is None else verify_window_sec
@@ -665,6 +668,20 @@ def run(source, binary, artifact_dir, *, quality_wait=None, sleeper=None, clock=
         repository_context(source)
         config = cfg_mod.load_onboarding_config(
             source, require_tracked_clean=True, expected_sha=sha)
+
+        try:
+            auth_intent = auth_redirects.load_intent(
+                source, git=command, hostname=config['hostname'], repository_id=rid,
+                source_sha=sha, supabase_url=os.environ['SUPABASE_URL'])
+        except auth_redirects.AuthRedirectError as exc:
+            result['status'] = 'auth_redirect_policy_invalid'
+            result['stages']['auth_redirects'] = {'status': str(exc)}
+            result['stages']['provider_writes'] = 'blocked'
+            return finalize(artifact_dir, result, 1)
+        result['stages']['auth_redirects'] = {
+            'status': 'awaiting_hostname_verification' if auth_intent else 'disabled',
+            'verified': False,
+        }
 
         db_preflight = load('database-preflight')
         try:
@@ -1032,8 +1049,19 @@ def run(source, binary, artifact_dir, *, quality_wait=None, sleeper=None, clock=
         verify_status = (verify_lines[-1] or {}).get('status') if verify_lines else None
         result['database'] = database_gap_report(preflight_report, delivery_report)
         if verify_status == 'verification_passed':
-            result['status'] = 'infrastructure_dns_verified_database_incomplete'
             result['infrastructure_dns_ready'] = True
+            if auth_intent:
+                if verify_code != 0:
+                    result['status'] = 'auth_redirect_hostname_verification_failed'
+                    result['infrastructure_dns_ready'] = False
+                    return finalize(artifact_dir, result, 1)
+                # Do not publish a request for a now-superseded default-branch head.
+                repository_context(source)
+                write_artifact(artifact_dir, 'auth-redirect-intent.json', auth_intent.artifact())
+                result['stages']['auth_redirects']['status'] = 'awaiting_project_owner_apply'
+                result['status'] = 'infrastructure_dns_verified_auth_pending_database_incomplete'
+            else:
+                result['status'] = 'infrastructure_dns_verified_database_incomplete'
             return finalize(artifact_dir, result, 0)
         if verify_status == 'ready_but_verification_protected':
             result['status'] = 'infrastructure_dns_protected_database_incomplete'
