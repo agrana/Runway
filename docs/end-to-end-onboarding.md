@@ -8,6 +8,7 @@ Onboarding is complete only after all of these checks pass:
 
 - The intended hostname resolves through authoritative and independent public DNS to the owned application deployment.
 - HTTPS is valid, the application page loads, and the production health revision matches the approved deployment.
+- For Auth-enabled apps, the approved exact redirect entries are verified in the intended Supabase project and the app's Auth round-trips pass.
 - The deployed application connects to its approved Supabase database using its runtime identity and can perform the intended application-table operation.
 - Reviewed app-scoped schema migrations have been applied and their ledger matches the expected versions and checksums.
 - Application grants are least privilege, every application table has RLS enabled with explicit policies, and cross-user and cross-app isolation checks pass using runtime credentials.
@@ -33,6 +34,7 @@ Operator routine actions are Secrets setup and merge-request approval. Digest co
 | Quality CI | `app-quality.yml` installs Podman on the runner and tests against disposable PostgreSQL; merge onboarding waits for current-head success | These tests remain fixture evidence, separate from the approved Supabase target |
 | Shell deployment | `merge-onboarding.yml` deploys under merge policy; `launch-app.yml` remains maintainer dispatch | Shell success is an intermediate result |
 | Hostname and DNS | Merge onboarding applies/verifies configured hostname; `custom-domain.yml` remains digest-based maintainer path | Confirm verify evidence per application hostname |
+| Supabase Auth redirects (opt-in) | The [Auth redirect policy](supabase-auth-redirect-onboarding.md) produces an exact-head handoff after hostname verification; Runway's manual project-owner writer is configured off by default | Separately authorize and configure the writer, verify live readback, and test the actual Auth round-trips |
 | App-scoped schema migrations | Foundation + delivery libraries (`docs/managed-database-foundation.md`, `docs/managed-database-delivery.md`); merge wires enroll → authorized delivery → deploy when reviewed config enables auto_apply; template `database-delivery.config.json` stays disabled; `.github/workflows/deploy.yml` explicitly disables live migrations | Activate via reviewed delivery config PR; prove deployed HTTP/JWT data-path before claiming full onboarding |
 | Live database and isolation verification | Shell health and public configuration checks do not exercise application tables | Add protected Actions checks against the deployed application and approved database using real runtime identities |
 | Combined readiness | Merge onboarding reports infrastructure/DNS separately from mandatory DB incompleteness | Do not treat green shell+DNS as full-app-ready |

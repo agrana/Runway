@@ -111,7 +111,11 @@ class WorkflowSafetyTests(unittest.TestCase):
         for path in (REPO_ROOT / '.github/workflows').glob('*.yml'):
             for action, ref in re.findall(r'uses:\s*(actions/[a-z-]+)@([^\s#]+)', path.read_text()):
                 if action in expected:
-                    self.assertEqual(ref, expected[action], f'{path.name}: {action}')
+                    reviewed_ref = expected[action]
+                    if path.name == 'project-auth-redirect-writer.yml' and action == 'actions/checkout':
+                        # Auth config writer uses the immutable commit of the same v7.0.1 release.
+                        reviewed_ref = '3d3c42e5aac5ba805825da76410c181273ba90b1'
+                    self.assertEqual(ref, reviewed_ref, f'{path.name}: {action}')
 
     def test_legacy_deploy_and_terraform_remain_disabled(self) -> None:
         deploy = _read(".github/workflows/deploy.yml")

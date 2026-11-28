@@ -290,6 +290,76 @@ class MergeOnboardingOrchestratorTests(unittest.TestCase):
         self.assertEqual(result['status'], 'setup_required')
         self.assertIn('VERCEL_API_TOKEN', result['required_secret_names'])
 
+    def enable_auth_redirects(self, *, hostname='app.example.com'):
+        self.enable_config()
+        ref = 'abcdefghijklmnopqrst'
+        os.environ['SUPABASE_URL'] = f'https://{ref}.supabase.co'
+        (self.source / 'supabase-auth-redirects.config.json').write_text(json.dumps({
+            'schema_version': 1, 'enabled': True, 'project_ref': ref,
+            'callbacks': [f'https://{hostname}/auth/callback?type=recovery&next=/auth/reset-password'],
+        }))
+        self.sha = git_commit(self.source, 'enable-auth-redirects')
+        os.environ['GITHUB_SHA'] = self.sha
+        self.quality_runs = [self.quality_run()]
+
+    def test_bad_auth_policy_blocks_shell_before_provider_writes(self):
+        self.enable_auth_redirects(hostname='another.example.com')
+        with patch.object(orch, 'run_python_script', side_effect=AssertionError('no writes')) as script:
+            code, _, result = self.run_orch()
+        self.assertEqual(code, 1)
+        self.assertEqual(result['status'], 'auth_redirect_policy_invalid')
+        self.assertEqual(result['stages']['provider_writes'], 'blocked')
+        script.assert_not_called()
+
+    def test_dirty_auth_policy_cannot_publish(self):
+        self.enable_auth_redirects()
+        (self.source / 'supabase-auth-redirects.config.json').write_text('{}')
+        code, _, result = self.run_orch()
+        self.assertEqual((code, result['status']), (1, 'source_dirty'))
+        self.assertFalse((self.artifacts / 'auth-redirect-intent.json').exists())
+
+    def test_auth_intent_requires_verified_exact_current_head(self):
+        self.enable_auth_redirects()
+        sha = self.sha
+        artifact = self.artifacts / 'auth-redirect-intent.json'
+        for status, verify_code, stale, expected in (
+            ('ready_but_verification_protected', 1, False, 'infrastructure_dns_protected_database_incomplete'),
+            ('verification_passed', 1, False, 'auth_redirect_hostname_verification_failed'),
+            ('verification_passed', 0, True, 'source_sha_mismatch'),
+            ('verification_passed', 0, False, 'infrastructure_dns_verified_auth_pending_database_incomplete'),
+        ):
+            with self.subTest(status=status, verify_code=verify_code, stale=stale):
+                self.sha = sha
+
+                def fake_script(script, source, binary, args, env, directory, **kw):
+                    op = args[args.index('--operation') + 1]
+                    if script == 'launch-app.py':
+                        return 0, [{'status': 'page_and_health_verified', 'project_id': 'prj_Offline',
+                                    'deployment_id': 'dpl_Offline', 'source_sha': sha}], '', ''
+                    self.assertEqual(script, 'custom-domain.py')
+                    if op == 'apply':
+                        return 0, [{'status': 'already_configured'}], '', ''
+                    self.assertEqual(op, 'verify')
+                    self.assertIn('dpl_Offline', args)
+                    self.assertFalse(artifact.exists())
+                    if stale:
+                        self.sha = 'f' * 40
+                    return verify_code, [{'status': status}], '', ''
+
+                with patch.object(orch, 'run_python_script', side_effect=fake_script):
+                    code, _, result = self.run_orch()
+                self.assertEqual(result['status'], expected)
+                self.assertFalse(result['full_app_ready'])
+                self.assertFalse(result['stages']['auth_redirects']['verified'])
+                success = verify_code == 0 and not stale
+                self.assertEqual(code, 0 if success else 1)
+                self.assertEqual(artifact.exists(), success)
+        self.assertEqual(json.loads(artifact.read_text()), {
+            'schema_version': 1, 'source_sha': sha, 'repository_id': '2000000001',
+            'project_ref': 'abcdefghijklmnopqrst', 'hostname': 'app.example.com',
+            'callbacks': ['https://app.example.com/auth/callback?type=recovery&next=/auth/reset-password'],
+        })
+
     def test_event_branch_upstream_fork_template_guards(self):
         self.enable_config()
         for key, value, status in (
